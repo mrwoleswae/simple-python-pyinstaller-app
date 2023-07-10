@@ -30,20 +30,6 @@ pipeline {
                 }
             }
         }
-        stage('Manual Approval') {
-            agent none
-            steps {
-                input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed', submitterParameter: 'APPROVER'
-            }
-            post {
-                success {
-                    echo 'Tahap Manual Approval telah disetujui'
-                }
-                failure {
-                    error 'Tahap Manual Approval ditolak'
-                }
-            }
-        }
         stage('Deploy') { 
             agent any
             environment { 
@@ -60,16 +46,10 @@ pipeline {
                 success {
                     archiveArtifacts "${env.BUILD_ID}/sources/dist/add2vals" 
                     sh "docker run --rm -v ${VOLUME} ${IMAGE} 'rm -rf build dist'"
+                    script {
+                        sleep 1 * 60 // Jeda eksekusi selama 1 menit
+                    }
                 }
-            }
-        }
-        
-    }
-    post {
-        always {
-            script {
-                sleep 1 * 60 // Menjeda eksekusi pipeline selama 1 menit
-                currentBuild.result = 'SUCCESS' // Mengatur eksekusi pipeline sebagai sukses setelah jeda waktu selesai
             }
         }
     }
